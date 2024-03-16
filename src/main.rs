@@ -52,9 +52,10 @@ impl Universe {
         let mut grid_vec = vec![vec![Sector::Uninhabited; cols]; rows];
         for c in seed_vals.chars() {
             match c {
-                '0' => grid_vec[row][col] = Sector::Uninhabited,
-                '1' => grid_vec[row][col] = Sector::Inhabited,
+                '.' => grid_vec[row][col] = Sector::Uninhabited,
+                'O' => grid_vec[row][col] = Sector::Inhabited,
                 _ => return Err(UniverseCreationError),
+
             };
             col += 1;
             if col == cols {
@@ -128,7 +129,7 @@ fn main() {
     println!("Pick a seed:");
 
     // Instantiate the universe
-    let mut universe = match Universe::new(String::from("Testseed"), 5, 5, "0000000110011000010000000")
+    let mut universe = match Universe::new(String::from("Testseed"), 12, 18, "....OO......OO.......O.O......O.O......O..........O...OO.O..........O.OOOO.O.O..OO..O.O.OO...O.O.O..O.O.O......O.O.O..O.O.O...OO.O.O..OO..O.O.OOOO.O..........O.OO...O..........O......O.O......O.O.......OO......OO....")
     {
         Ok(u) => u,
         Err(e) => panic!("{e}"),
