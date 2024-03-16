@@ -1,16 +1,24 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-struct UniverseCreationError;
+enum UniverseCreationError {
+    InvalidSeedLength,
+    InvalidSeedCharacter(char),
+}
 impl Display for UniverseCreationError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "This universe is invalid, try an alternate one.")
+        write!(f, "This universe is invalid, try an alternate one.").expect("_");
+        match self {
+            Self::InvalidSeedLength =>  write!(f, "The width or height provided is too small."),
+            Self::InvalidSeedCharacter(c) => write!(f, "A bad character was provided ({c})."),
+        }
     }
 }
 
 struct Universe {
     seed_name: String,
+    seed_description: String,
     rows: usize,
     cols: usize,
     sectors: Vec<Vec<bool>>,
@@ -31,7 +39,7 @@ impl Universe {
     fn new(name: String, rows: usize, cols: usize, seed_vals: &str) -> Result<Universe, UniverseCreationError> {
         // Check if the seed_vals str is valid given the grid size and seed values
         if seed_vals.len() != rows * cols {
-            return Err(UniverseCreationError);
+            return Err(UniverseCreationError::InvalidSeedLength);
         }
         // Check to make sure all values are either 0 or 1, might as well make the grid on the fly too
         let mut row: usize = 0;
@@ -41,7 +49,7 @@ impl Universe {
             match c {
                 '.' => grid_vec[row][col] = false,
                 'O' => grid_vec[row][col] = true,
-                _ => return Err(UniverseCreationError),
+                c => return Err(UniverseCreationError::InvalidSeedCharacter(c)),
 
             };
             col += 1;
@@ -52,6 +60,7 @@ impl Universe {
         }
         Ok(Universe {
             seed_name: name,
+            seed_description: String::from("TODO"),
             rows: rows,
             cols: cols,
             sectors: grid_vec,
@@ -101,7 +110,8 @@ impl Universe {
         }
 
         Universe {
-            seed_name: String::from("Hello"),
+            seed_name: String::from("TODO name transfer"),
+            seed_description: String::from("TODO description"),
             rows: self.rows,
             cols: self.cols,
             sectors: grid_vec,
@@ -133,8 +143,10 @@ fn main() {
         print!("\n");
     }
     loop {
+        let before = Instant::now();
         universe = universe.process_state();
-        println!("Epoch: {epoch} UwU's");
+        let elapsed = before.elapsed();
+        println!("Epoch: {epoch} generated in {:}µs", elapsed.as_micros());
         println!("{universe}");
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         epoch += 1;
