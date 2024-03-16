@@ -24,7 +24,8 @@ impl fmt::Display for UniverseCreationError {
 
 struct Universe {
     seed_name: String,
-    size: usize,
+    rows: usize,
+    cols: usize,
     sectors: Vec<Vec<Sector>>,
 }
 impl fmt::Display for Universe {
@@ -40,15 +41,15 @@ impl fmt::Display for Universe {
 }
 
 impl Universe {
-    fn new(name: String, size: usize, seed_vals: &str) -> Result<Universe, UniverseCreationError> {
+    fn new(name: String, rows: usize, cols: usize, seed_vals: &str) -> Result<Universe, UniverseCreationError> {
         // Check if the seed_vals str is valid given the grid size and seed values
-        if seed_vals.len() != size * size {
+        if seed_vals.len() != rows * cols {
             return Err(UniverseCreationError);
         }
         // Check to make sure all values are either 0 or 1, might as well make the grid on the fly too
         let mut row: usize = 0;
         let mut col: usize = 0;
-        let mut grid_vec = vec![vec![Sector::Uninhabited; size]; size];
+        let mut grid_vec = vec![vec![Sector::Uninhabited; cols]; rows];
         for c in seed_vals.chars() {
             match c {
                 '0' => grid_vec[row][col] = Sector::Uninhabited,
@@ -56,23 +57,24 @@ impl Universe {
                 _ => return Err(UniverseCreationError),
             };
             col += 1;
-            if col == size {
+            if col == cols {
                 col = 0;
                 row += 1;
             }
         }
         Ok(Universe {
             seed_name: name,
-            size: size,
+            rows: rows,
+            cols: cols,
             sectors: grid_vec,
         })
     }
 
     fn process_cell(&self, row: usize, col: usize) -> Sector {
         let row_min = if row == 0 { row } else { row - 1 };
-        let row_max = if row == self.size - 1 { row } else { row + 1 };
+        let row_max = if row == self.rows - 1 { row } else { row + 1 };
         let col_min = if col == 0 { col } else { col - 1 };
-        let col_max = if col == self.size - 1 { col } else { col + 1 };
+        let col_max = if col == self.cols - 1 { col } else { col + 1 };
 
         let mut neighbors = 0;
 
@@ -102,17 +104,18 @@ impl Universe {
     }
 
     fn process_state(&self) -> Universe {
-        let mut grid_vec = vec![vec![Sector::Uninhabited; self.size]; self.size];
+        let mut grid_vec = vec![vec![Sector::Uninhabited; self.cols]; self.rows];
 
-        for i in 0..self.size {
-            for j in 0..self.size {
+        for i in 0..self.rows {
+            for j in 0..self.cols {
                 grid_vec[i][j] = self.process_cell(i, j);
             }
         }
 
         Universe {
             seed_name: String::from("Hello"),
-            size: self.size,
+            rows: self.rows,
+            cols: self.cols,
             sectors: grid_vec,
         }
     }
@@ -125,7 +128,7 @@ fn main() {
     println!("Pick a seed:");
 
     // Instantiate the universe
-    let mut universe = match Universe::new(String::from("Testseed"), 5, "0000000110011000010000000")
+    let mut universe = match Universe::new(String::from("Testseed"), 5, 5, "0000000110011000010000000")
     {
         Ok(u) => u,
         Err(e) => panic!("{e}"),
