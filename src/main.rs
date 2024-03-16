@@ -90,7 +90,7 @@ impl Universe {
             }
         }
 
-        match self.sectors[row][col] {
+        let m = match self.sectors[row][col] {
             Sector::Inhabited => {
                 neighbors -= 1;
                 match neighbors {
@@ -98,14 +98,16 @@ impl Universe {
                     2 | 3 => Sector::Inhabited,
                     _ => Sector::Uninhabited
                 }
-            }
+            },
             Sector::Uninhabited => {
                 match neighbors {
                     3 => Sector::Inhabited,
                     _ => Sector::Uninhabited,
                 }
-            }
-        }
+            },
+        };
+        println!("n = {neighbors}");
+        m
     }
 
     fn process_state(&self) -> Universe{
@@ -114,6 +116,7 @@ impl Universe {
         for i in 0..self.size {
             for j in 0..self.size {
                 grid_vec[i][j] = self.process_cell(i, j);
+                println!("({i}, {j}) -> {}", grid_vec[i][j]);
             }
         }
 
@@ -140,12 +143,12 @@ fn main() {
     println!("Seed:\n{universe}");
 
     // Run the universe
-    let delay = time::Duration::from_millis(10000);
+    let delay = time::Duration::from_millis(2000);
     let mut epoch = 0;
     loop {
 
         // print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-        let universe = universe.process_state();
+        let universe = Universe::process_state(&universe);
         println!("Epoch: {epoch}");
         println!("{universe}");
         epoch += 1;
