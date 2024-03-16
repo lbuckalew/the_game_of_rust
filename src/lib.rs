@@ -1,8 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::thread::sleep;
-use std::time::{Duration, Instant};
-
-enum UniverseCreationError {
+pub enum UniverseCreationError {
     InvalidSeedLength,
     InvalidSeedCharacter(char),
 }
@@ -16,12 +13,12 @@ impl Display for UniverseCreationError {
     }
 }
 
-struct Universe {
+pub struct Universe {
     seed_name: String,
     seed_description: String,
     rows: usize,
     cols: usize,
-    sectors: Vec<Vec<bool>>,
+    pub sectors: Vec<Vec<bool>>,
 }
 impl Display for Universe {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
@@ -36,7 +33,7 @@ impl Display for Universe {
 }
 
 impl Universe {
-    fn new(name: String, rows: usize, cols: usize, seed_vals: &str) -> Result<Universe, UniverseCreationError> {
+    pub fn new(name: String, rows: usize, cols: usize, seed_vals: &str) -> Result<Universe, UniverseCreationError> {
         // Check if the seed_vals str is valid given the grid size and seed values
         if seed_vals.len() != rows * cols {
             return Err(UniverseCreationError::InvalidSeedLength);
@@ -100,7 +97,7 @@ impl Universe {
         }
     }
 
-    fn process_state(&self) -> Universe {
+    pub fn process_state(&self) -> Universe {
         let mut grid_vec = vec![vec![false; self.cols]; self.rows];
 
         for i in 0..self.rows {
@@ -116,40 +113,5 @@ impl Universe {
             cols: self.cols,
             sectors: grid_vec,
         }
-    }
-}
-
-fn main() {
-    println!("Hello, world!\n");
-
-    // Let them pick a seed
-    println!("Pick a seed:");
-
-    // Instantiate the universe
-    let mut universe = match Universe::new(String::from("Testseed"), 12, 18, "....OO......OO.......O.O......O.O......O..........O...OO.O..........O.OOOO.O.O..OO..O.O.OO...O.O.O..O.O.O......O.O.O..O.O.O...OO.O.O..OO..O.O.OOOO.O..........O.OO...O..........O......O.O......O.O.......OO......OO....")
-    {
-        Ok(u) => u,
-        Err(e) => panic!("{e}"),
-    };
-
-    println!("Seed:\n{universe}");
-
-    // Run the universe
-    let delay = Duration::from_millis(500);
-    let mut epoch = 0;
-
-    // Leave room for the board to change
-    for _i in &universe.sectors {
-        print!("\n");
-    }
-    loop {
-        let before = Instant::now();
-        universe = universe.process_state();
-        let elapsed = before.elapsed();
-        println!("Epoch: {epoch} generated in {:}µs", elapsed.as_micros());
-        println!("{universe}");
-        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-        epoch += 1;
-        sleep(delay);
     }
 }
