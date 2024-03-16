@@ -1,23 +1,10 @@
-use std::{cmp, fmt, thread, time};
-
-#[derive(Clone, Debug)]
-enum Sector {
-    Inhabited,
-    Uninhabited,
-}
-impl fmt::Display for Sector {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let printable = match *self {
-            Sector::Inhabited => "⬜",
-            Sector::Uninhabited => "⬛",
-        };
-        write!(f, "{}", printable)
-    }
-}
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::thread::sleep;
+use std::time::Duration;
 
 struct UniverseCreationError;
-impl fmt::Display for UniverseCreationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Display for UniverseCreationError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "This universe is invalid, try an alternate one.")
     }
 }
@@ -26,13 +13,13 @@ struct Universe {
     seed_name: String,
     rows: usize,
     cols: usize,
-    sectors: Vec<Vec<Sector>>,
+    sectors: Vec<Vec<bool>>,
 }
-impl fmt::Display for Universe {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Display for Universe {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         for row in self.sectors.iter() {
             for val in row.iter() {
-                write!(f, "{}", val).expect("Error in printing Sector.");
+                write!(f, "{}", if *val {"⬜"} else {"⬛"}).expect("Error in printing Sector.");
             }
             write!(f, "\n").expect("Error in printing Sector.");
         }
@@ -49,11 +36,11 @@ impl Universe {
         // Check to make sure all values are either 0 or 1, might as well make the grid on the fly too
         let mut row: usize = 0;
         let mut col: usize = 0;
-        let mut grid_vec = vec![vec![Sector::Uninhabited; cols]; rows];
+        let mut grid_vec = vec![vec![false; cols]; rows];
         for c in seed_vals.chars() {
             match c {
-                '.' => grid_vec[row][col] = Sector::Uninhabited,
-                'O' => grid_vec[row][col] = Sector::Inhabited,
+                '.' => grid_vec[row][col] = false,
+                'O' => grid_vec[row][col] = true,
                 _ => return Err(UniverseCreationError),
 
             };
@@ -71,7 +58,7 @@ impl Universe {
         })
     }
 
-    fn process_cell(&self, row: usize, col: usize) -> Sector {
+    fn process_cell(&self, row: usize, col: usize) -> bool {
         let row_min = if row == 0 { row } else { row - 1 };
         let row_max = if row == self.rows - 1 { row } else { row + 1 };
         let col_min = if col == 0 { col } else { col - 1 };
@@ -82,30 +69,30 @@ impl Universe {
         for i in row_min..=row_max {
             for j in col_min..=col_max {
                 match self.sectors[i][j] {
-                    Sector::Inhabited => neighbors += 1,
-                    Sector::Uninhabited => (),
+                    true => neighbors += 1,
+                    false => (),
                 };
             }
         }
 
         match self.sectors[row][col] {
-            Sector::Inhabited => {
+            true => {
                 neighbors -= 1;
                 match neighbors {
-                    ..=1 => Sector::Uninhabited,
-                    2 | 3 => Sector::Inhabited,
-                    _ => Sector::Uninhabited,
+                    ..=1 => false,
+                    2 | 3 => true,
+                    _ => false,
                 }
             }
-            Sector::Uninhabited => match neighbors {
-                3 => Sector::Inhabited,
-                _ => Sector::Uninhabited,
+            false => match neighbors {
+                3 => true,
+                _ => false,
             },
         }
     }
 
     fn process_state(&self) -> Universe {
-        let mut grid_vec = vec![vec![Sector::Uninhabited; self.cols]; self.rows];
+        let mut grid_vec = vec![vec![false; self.cols]; self.rows];
 
         for i in 0..self.rows {
             for j in 0..self.cols {
@@ -138,7 +125,7 @@ fn main() {
     println!("Seed:\n{universe}");
 
     // Run the universe
-    let delay = time::Duration::from_millis(500);
+    let delay = Duration::from_millis(500);
     let mut epoch = 0;
 
     // Leave room for the board to change
@@ -147,10 +134,10 @@ fn main() {
     }
     loop {
         universe = universe.process_state();
-        println!("Epoch: {epoch}");
+        println!("Epoch: {epoch} UwU's");
         println!("{universe}");
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         epoch += 1;
-        thread::sleep(delay);
+        sleep(delay);
     }
 }
