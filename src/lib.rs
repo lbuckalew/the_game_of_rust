@@ -7,7 +7,7 @@ impl Display for UniverseCreationError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "This universe is invalid, try an alternate one.").expect("_");
         match self {
-            Self::InvalidSeedLength =>  write!(f, "The width or height provided is too small."),
+            Self::InvalidSeedLength => write!(f, "The width or height provided is too small."),
             Self::InvalidSeedCharacter(c) => write!(f, "A bad character was provided ({c})."),
         }
     }
@@ -24,7 +24,7 @@ impl Display for Universe {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         for row in self.sectors.iter() {
             for val in row.iter() {
-                write!(f, "{}", if *val {"⬜"} else {"⬛"}).expect("Error in printing Sector.");
+                write!(f, "{}", if *val { "⬜" } else { "⬛" }).expect("Error in printing Sector.");
             }
             write!(f, "\n").expect("Error in printing Sector.");
         }
@@ -33,7 +33,12 @@ impl Display for Universe {
 }
 
 impl Universe {
-    pub fn new(name: String, rows: usize, cols: usize, seed_vals: &str) -> Result<Universe, UniverseCreationError> {
+    pub fn new(
+        name: String,
+        rows: usize,
+        cols: usize,
+        seed_vals: &str,
+    ) -> Result<Universe, UniverseCreationError> {
         // Check if the seed_vals str is valid given the grid size and seed values
         if seed_vals.len() != rows * cols {
             return Err(UniverseCreationError::InvalidSeedLength);
@@ -47,7 +52,6 @@ impl Universe {
                 '.' => grid_vec[row][col] = false,
                 'O' => grid_vec[row][col] = true,
                 c => return Err(UniverseCreationError::InvalidSeedCharacter(c)),
-
             };
             col += 1;
             if col == cols {
