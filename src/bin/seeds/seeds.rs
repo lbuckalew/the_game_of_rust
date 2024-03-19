@@ -3487,10 +3487,14 @@ pub fn get_seed_size(filename: String) -> Result<(usize, usize, Vec<String>), Se
     let filepath = format!("src/bin/seeds/life_wiki_seeds/{}", filename);
     let filepath = Path::new(&filepath);
 
-    let lines: Vec<String> = read_to_string(filepath).unwrap()
-        .lines()
-        .map(String::from)
-        .collect();
+    let mut lines: Vec<String> = Vec::new();
+
+    for line in read_to_string(filepath).unwrap().lines() {
+        match line.chars().next().unwrap() {
+            '!' => continue,
+            _ => lines.push(line.to_string()),
+        };
+    }
 
     Ok((lines.len(), lines.iter().map(|f|f.len()).max().unwrap(), lines))
 }
@@ -3505,22 +3509,32 @@ pub fn get_seed(filename: String, rows: usize, cols: usize) -> Result<String, Se
     // Find the offsets for centering seed in new size
     let row_offset = (rows - min_rows) / 2;
     let col_offset = (cols - min_cols) / 2;
+    println!("rowoff: {} coloffs {}", row_offset, col_offset);
+    println!("mincols {} minrows {}", min_cols, min_rows);
     // Plant the seed
     let mut resized: Vec<String> = Vec::new();
-    for r in 0..rows {
-        if r < row_offset {
-            resized.push((0..rows).map(|_| ".").collect::<String>());
-        }
-        else if r < row_offset + min_rows {
-            let seed_line = (0..row_offset).map(|_| ".").collect::<String>()
-                + 
-        }
+    for _r in 0..row_offset {
+        resized.push((0..rows).map(|_| ".").collect::<String>());
+        println!("added blank line");
+    }
+    for l in lines {
+        // temp_string.push((0..col_offset).map(|_| ".").collect::<String>());
+        let temp_string = format!("{}{}{}", 
+            (0..col_offset).map(|_| ".").collect::<String>(),
+            l,
+            (col_offset + min_cols..cols).map(|_| ".").collect::<String>()
+        );
+        println!("{temp_string}");
+        resized.push(temp_string);
+    }
+    for _r in row_offset + min_rows..rows {
+        resized.push((0..rows).map(|_| ".").collect::<String>());
+        println!("added blank line");
     }
 
+    let result = resized.join("");
 
-
-
-    Ok(String::new())
+    Ok(result)
 }
 
 // This function crawls the life_wiki_seeds directory for all .cells files to create a library
@@ -3579,9 +3593,12 @@ fn rebuild_seed_library() {
 fn main() {
     println!("Hi!");
 
-    let results = search_seeds(String::from("p10")).unwrap();
+    let results = search_seeds(String::from("101")).unwrap();
     println!("{:?}", results);
 
-    let dims = get_seed_size(String::from("p100honeyfarmhassler2.cells"));
+    let dims = get_seed_size(String::from("101.cells"));
     println!("{:?}", dims);
+
+    let wholestring = get_seed(String::from("101.cells"), 80, 80).unwrap();
+    println!("{wholestring}");
 }
