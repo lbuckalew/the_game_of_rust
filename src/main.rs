@@ -100,7 +100,7 @@ fn main() {
     }
 
     // Run the universe
-    let delay = Duration::from_millis(500);
+    let delay = Duration::from_millis(136);
     let mut epoch = 0;
 
     for _i in &universe.sectors {
