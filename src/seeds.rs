@@ -3483,7 +3483,7 @@ pub fn search_seeds(s: String) -> Result<Vec<String>, SeedError> {
 }
 
 pub fn get_seed_size(filename: String) -> Result<(usize, usize, Vec<String>), SeedError> {
-    let filepath = format!("src/bin/seeds/life_wiki_seeds/{}", filename);
+    let filepath = format!("src/life_wiki_seeds/{}", filename);
     let filepath = Path::new(&filepath);
 
     let mut lines: Vec<String> = Vec::new();

@@ -18,6 +18,7 @@ fn main() {
     |  |     |  |  |  | |  |____    |  |__| |  /  _____  \  |  |  |  | |  |____    |  `--'  | |  |        |  |\  \----.|  `--'  | .----)   |      |  |     
     |__|     |__|  |__| |_______|    \______| /__/     \__\ |__|  |__| |_______|    \______/  |__|        | _| `._____| \______/  |_______/       |__|    "#
     );
+    println!("");
 
     let mut universe = Universe::new(String::from("def"), 2, 2, "....").unwrap();
     
@@ -25,15 +26,18 @@ fn main() {
     loop {
         println!("Find a seed! Do you want to");
         println!("(1) search for a seed or");
-        println!("(2) start a seed's exact name'");
+        println!("(2) start a seed's exact name");
         let mut answer = String::new();
         std::io::stdin().read_line(&mut answer).unwrap();
+        println!("");
 
-        match answer.as_str() {
+        match answer.trim() {
             "1" => {
                 println!("Okay, input a search term...");
                 let mut search = String::new();
                 std::io::stdin().read_line(&mut search).unwrap();
+                search = search.trim().to_string();
+                println!("");
 
                 let search_results = search_seeds(search);
                 match search_results {
@@ -42,6 +46,7 @@ fn main() {
                         for res in s {
                             println!("{res}");
                         }
+                        println!("");
                         continue;
                     },
                     Err(e) => {
@@ -54,11 +59,13 @@ fn main() {
                 println!("Okay, input the exact seed name (without the .cells extension)...");
                 let mut seed_name = String::new();
                 std::io::stdin().read_line(&mut seed_name).unwrap();
+                seed_name = seed_name.trim().to_string();
 
                 let seed_result = get_seed_size(seed_name.clone());
                 match seed_result {
                     Ok(seed_result) => {
                         println!("has a minimum grid size of {} rows and {} columns.", seed_result.0, seed_result.1);
+                        println!("");
                         println!("How big of a grid would you like to place it in?");
 
                         println!("Rows:");
@@ -70,15 +77,12 @@ fn main() {
                         let mut num_cols = String::new();
                         std::io::stdin().read_line(&mut num_cols).unwrap();
                         let num_cols = num_cols.trim().parse().expect("number pls");
+                        println!("");
 
                         let seed_string = get_seed(seed_name, num_rows, num_cols).unwrap();
 
                         // Instantiate the universe
-                        let universe = match Universe::new(String::from("Testseed"), num_rows, num_cols, &seed_string)
-                        {
-                            Ok(u) => u,
-                            Err(e) => panic!("{e}"),
-                        };
+                        universe = Universe::new(String::from("Testseed"), num_rows, num_cols, &seed_string).unwrap();
                         println!("Seed:\n{universe}");
                         break;
                     },
