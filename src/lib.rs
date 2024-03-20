@@ -1,4 +1,8 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
+
+pub mod seeds;
+
+#[derive(Debug)]
 pub enum UniverseCreationError {
     InvalidSeedLength,
     InvalidSeedCharacter(char),

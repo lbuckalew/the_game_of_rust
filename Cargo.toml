@@ -6,15 +6,3 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
-[lib]
-name = "the_game_of_rust"
-path = "src/lib.rs"
-
-[[bin]]
-name = "the_game_of_rust"
-path = "src/bin/main.rs"
-
-[[bin]]
-name = "life_wiki"
-path = "src/bin/seeds/seeds.rs"

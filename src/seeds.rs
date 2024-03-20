@@ -1,5 +1,4 @@
-use std::ffi::OsString;
-use std::fs::{File, read_dir, read_to_string};
+use std::fs::read_to_string;
 use std::path::Path;
 
 const TEST: &'static [&'static (char, &'static [&'static str])] = &[
@@ -3489,14 +3488,25 @@ pub fn get_seed_size(filename: String) -> Result<(usize, usize, Vec<String>), Se
 
     let mut lines: Vec<String> = Vec::new();
 
-    for line in read_to_string(filepath).unwrap().lines() {
+    for line in read_to_string(filepath).unwrap().split_inclusive("\n") {
         match line.chars().next().unwrap() {
             '!' => continue,
-            _ => lines.push(line.to_string()),
+            '\r' | '\n' => lines.push(".".to_string()),
+            _ => lines.push(
+                line.strip_suffix("\n")
+                    .unwrap_or(line)
+                    .strip_suffix("\r")
+                    .unwrap_or(line)
+                    .to_string(),
+            ),
         };
     }
 
-    Ok((lines.len(), lines.iter().map(|f|f.len()).max().unwrap(), lines))
+    Ok((
+        lines.len(),
+        lines.iter().map(|f| f.len()).max().unwrap(),
+        lines,
+    ))
 }
 
 pub fn get_seed(filename: String, rows: usize, cols: usize) -> Result<String, SeedError> {
@@ -3515,21 +3525,20 @@ pub fn get_seed(filename: String, rows: usize, cols: usize) -> Result<String, Se
     let mut resized: Vec<String> = Vec::new();
     for _r in 0..row_offset {
         resized.push((0..rows).map(|_| ".").collect::<String>());
-        println!("added blank line");
     }
     for l in lines {
-        // temp_string.push((0..col_offset).map(|_| ".").collect::<String>());
-        let temp_string = format!("{}{}{}", 
+        let temp_string = format!(
+            "{}{}{}",
             (0..col_offset).map(|_| ".").collect::<String>(),
             l,
-            (col_offset + min_cols..cols).map(|_| ".").collect::<String>()
+            (0..cols - col_offset - l.len())
+                .map(|_| ".")
+                .collect::<String>()
         );
-        println!("{temp_string}");
         resized.push(temp_string);
     }
     for _r in row_offset + min_rows..rows {
         resized.push((0..rows).map(|_| ".").collect::<String>());
-        println!("added blank line");
     }
 
     let result = resized.join("");
@@ -3537,68 +3546,68 @@ pub fn get_seed(filename: String, rows: usize, cols: usize) -> Result<String, Se
     Ok(result)
 }
 
-// This function crawls the life_wiki_seeds directory for all .cells files to create a library
-// Organized by the first letter of the filename to allow for easier searching.
-// It only needs to be run if you add or remove seeds from the directory.
-fn rebuild_seed_library() {
-    let mut seed_files: Vec<(char, Vec<OsString>)> = Vec::new();
+// // This function crawls the life_wiki_seeds directory for all .cells files to create a library
+// // Organized by the first letter of the filename to allow for easier searching.
+// // It only needs to be run if you add or remove seeds from the directory.
+// fn rebuild_seed_library() {
+//     let mut seed_files: Vec<(char, Vec<OsString>)> = Vec::new();
 
-    // Gets an iterator of all entries in directory
-    let dir_entries = read_dir("src/bin/seeds/life_wiki_seeds").expect("cant read dir");
-    // Iterates over all entreies, and get all info and metadata about them.
-    for entry in dir_entries {
-        let entry_filename = entry.unwrap().file_name();
-        let first_char = entry_filename
-            .clone()
-            .into_string()
-            .unwrap()
-            .chars()
-            .next()
-            .unwrap()
-            .to_ascii_lowercase();
+//     // Gets an iterator of all entries in directory
+//     let dir_entries = read_dir("src/bin/seeds/life_wiki_seeds").expect("cant read dir");
+//     // Iterates over all entreies, and get all info and metadata about them.
+//     for entry in dir_entries {
+//         let entry_filename = entry.unwrap().file_name();
+//         let first_char = entry_filename
+//             .clone()
+//             .into_string()
+//             .unwrap()
+//             .chars()
+//             .next()
+//             .unwrap()
+//             .to_ascii_lowercase();
 
-        // See if there's already an entry
-        let mut match_found = false;
-        let mut match_index = 0;
-        for (idx, shelf) in seed_files.iter().enumerate() {
-            if first_char == shelf.0 {
-                match_found = true;
-                match_index = idx;
-            }
-        }
-        if match_found {
-            seed_files[match_index].1.push(entry_filename);
-        } else {
-            let new_fn_vec = vec![entry_filename];
-            seed_files.push((first_char, new_fn_vec));
-        }
-    }
+//         // See if there's already an entry
+//         let mut match_found = false;
+//         let mut match_index = 0;
+//         for (idx, shelf) in seed_files.iter().enumerate() {
+//             if first_char == shelf.0 {
+//                 match_found = true;
+//                 match_index = idx;
+//             }
+//         }
+//         if match_found {
+//             seed_files[match_index].1.push(entry_filename);
+//         } else {
+//             let new_fn_vec = vec![entry_filename];
+//             seed_files.push((first_char, new_fn_vec));
+//         }
+//     }
 
-    println!("const TEST: &'static [&'static (char, &'static [&'static str])] = &[");
-    for i in seed_files {
-        println!("    &(");
-        println!("        '{}',", i.0);
-        println!("        &[");
+//     println!("const TEST: &'static [&'static (char, &'static [&'static str])] = &[");
+//     for i in seed_files {
+//         println!("    &(");
+//         println!("        '{}',", i.0);
+//         println!("        &[");
 
-        for j in i.1 {
-            println!("            \"{}\",", j.into_string().unwrap());
-        }
+//         for j in i.1 {
+//             println!("            \"{}\",", j.into_string().unwrap());
+//         }
 
-        println!("        ],");
-        println!("    ),");
-    }
-    println!("];");
-}
+//         println!("        ],");
+//         println!("    ),");
+//     }
+//     println!("];");
+// }
 
-fn main() {
-    println!("Hi!");
+// fn main() {
+//     println!("Hi!");
 
-    let results = search_seeds(String::from("101")).unwrap();
-    println!("{:?}", results);
+//     let results = search_seeds(String::from("101")).unwrap();
+//     println!("{:?}", results);
 
-    let dims = get_seed_size(String::from("101.cells"));
-    println!("{:?}", dims);
+//     let dims = get_seed_size(String::from("hacksaw.cells")).unwrap();
+//     println!("{:?}", dims);
 
-    let wholestring = get_seed(String::from("101.cells"), 80, 80).unwrap();
-    println!("{wholestring}");
-}
+//     let wholestring = get_seed(String::from("hacksaw.cells"), dims.0, dims.1).unwrap();
+//     println!("{wholestring}");
+// }
